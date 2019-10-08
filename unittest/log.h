@@ -1,7 +1,8 @@
 ///////////////////////////////////////////////////////////////////////
 // File:        log.h
 // Description: Include for custom log message for unittest for tesseract.
-//               based on //https://stackoverflow.com/questions/16491675/how-to-send-custom-message-in-google-c-testing-framework
+//              based on
+//              https://stackoverflow.com/questions/16491675/how-to-send-custom-message-in-google-c-testing-framework
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,16 +14,54 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 ///////////////////////////////////////////////////////////////////////
+
 #ifndef TESSERACT_UNITTEST_LOG_H_
 #define TESSERACT_UNITTEST_LOG_H_
 
+// This is a minimal implementation of the TensorFlow logging API
+// which is sufficient for the Tesseract unit tests.
+
+// See tensorflow/core/platform/default/logging.h for the original code.
+
 #include <iostream>
 
-  static class LOG { public: LOG() {}
-    std::ostream&  info() {
-        std::cout << "[ LOG MSG  ] ";
-        return std::cout;
-    }
-} log;
+enum LogLevel {
+  INFO, WARNING, ERROR, FATAL
+};
+
+// Avoid conflict with logging.h from TensorFlow.
+#undef LOG
+
+static inline std::ostream& LOG(enum LogLevel level)
+{
+  switch (level) {
+    case INFO:
+      std::cout << "[INFO]  ";
+      break;
+    case WARNING:
+      std::cout << "[WARN]  ";
+      break;
+    case ERROR:
+      std::cout << "[ERROR] ";
+      break;
+    case FATAL:
+      std::cout << "[FATAL] ";
+      break;
+  }
+  return std::cout;
+}
+
+// Avoid conflict with logging.h from TensorFlow.
+#undef QCHECK
+
+// https://github.com/google/ion/blob/master/ion/base/logging.h
+static inline std::ostream& QCHECK(bool condition)
+{
+  if (condition) {
+    static std::ostream null_stream(nullptr);
+    return null_stream;
+  }
+  return std::cout;
+}
 
 #endif  // TESSERACT_UNITTEST_LOG_H_
